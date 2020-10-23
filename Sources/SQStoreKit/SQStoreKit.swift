@@ -204,17 +204,12 @@ extension SQStoreKit: SKProductsRequestDelegate {
     
     private func restartRequest() {
         print("SQStoreKit >>> Restart request after \(Constants.kRestartReuestTimeInterval) sec")
-        if #available(OSX 10.12, *) {
-            self.requestTimer = Timer.scheduledTimer(withTimeInterval: Constants.kRestartReuestTimeInterval,
-                                                     repeats: true) { _ in
-                self.loadProducts()
-            }
-        } else {
+        DispatchQueue.main.async {
             self.requestTimer = Timer.scheduledTimer(timeInterval: Constants.kRestartReuestTimeInterval,
                                                      target: self,
-                                                     selector: #selector(loadProducts),
+                                                     selector: #selector(self.loadProducts),
                                                      userInfo: nil,
-                                                     repeats: true)
+                                                     repeats: false)
             if let timer = self.requestTimer {
                 RunLoop.main.add(timer, forMode: .common)
             }
