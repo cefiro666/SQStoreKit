@@ -198,15 +198,15 @@ extension SQStoreKit: SKProductsRequestDelegate {
     
     public func request(_ request: SKRequest, didFailWithError error: Error) {
         print("SQStoreKit >>> Error receive products list")
-        self.restartRequest()
         self.delegate?.updateProductsListError(error, store: self)
+        self.restartRequest()
     }
     
     private func restartRequest() {
         print("SQStoreKit >>> Restart request after \(Constants.kRestartReuestTimeInterval) sec")
         if #available(OSX 10.12, *) {
             self.requestTimer = Timer.scheduledTimer(withTimeInterval: Constants.kRestartReuestTimeInterval,
-                                                     repeats: false) { _ in
+                                                     repeats: true) { _ in
                 self.loadProducts()
             }
         } else {
