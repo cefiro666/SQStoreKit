@@ -117,6 +117,11 @@ open class SQStoreKit: NSObject {
         return self.productsList.first(where: {$0.productIdentifier == productsIdentifier.productId()})
     }
     
+    // получить все продукты
+    open func getProducts() -> [SKProduct] {
+        return self.productsList
+    }
+    
     // сколько доступно продуктов
     open func productsCount() -> Int {
         return self.productsList.count
