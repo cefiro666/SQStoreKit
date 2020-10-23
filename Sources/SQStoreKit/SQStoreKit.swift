@@ -16,7 +16,7 @@ import UIKit
 // MARK: - Constants
 fileprivate struct Constants {
     
-    static let kRestartReuestTimeInterval: TimeInterval = 30
+    static let kRestartReuestTimeInterval: TimeInterval = 15.0
     static let kSandboxUrl = "https://sandbox.itunes.apple.com/verifyReceipt"
     static let kBuyUrl = "https://buy.itunes.apple.com/verifyReceipt"
 }
@@ -131,6 +131,10 @@ open class SQStoreKit: NSObject {
 // MARK: - Private methods
     @objc private func loadProducts() {
         print("SQStoreKit >>> Attempt to load products...")
+        
+        self.requestTimer?.invalidate()
+        self.requestTimer = nil
+        
         let request = SKProductsRequest.init(productIdentifiers: self.productsIDs)
         request.delegate = self
         request.start()
@@ -200,13 +204,20 @@ extension SQStoreKit: SKProductsRequestDelegate {
     
     private func restartRequest() {
         print("SQStoreKit >>> Restart request after \(Constants.kRestartReuestTimeInterval) sec")
-        self.requestTimer = Timer.scheduledTimer(timeInterval: Constants.kRestartReuestTimeInterval,
-                                                 target: self,
-                                                 selector: #selector(loadProducts),
-                                                 userInfo: nil,
-                                                 repeats: false)
-        if let timer = self.requestTimer {
-            RunLoop.main.add(timer, forMode: .common)
+        if #available(OSX 10.12, *) {
+            self.requestTimer = Timer.scheduledTimer(withTimeInterval: Constants.kRestartReuestTimeInterval,
+                                                     repeats: false) { _ in
+                self.loadProducts()
+            }
+        } else {
+            self.requestTimer = Timer.scheduledTimer(timeInterval: Constants.kRestartReuestTimeInterval,
+                                                     target: self,
+                                                     selector: #selector(loadProducts),
+                                                     userInfo: nil,
+                                                     repeats: true)
+            if let timer = self.requestTimer {
+                RunLoop.main.add(timer, forMode: .common)
+            }
         }
     }
     
