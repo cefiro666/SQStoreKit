@@ -9,10 +9,6 @@
 import StoreKit
 import SystemConfiguration
 
-#if !os(macOS)
-import UIKit
-#endif
-
 // MARK: - Constants
 fileprivate struct Constants {
     
@@ -24,9 +20,6 @@ fileprivate struct Constants {
 // MARK: - SQStoreKit
 open class SQStoreKit: NSObject {
     
-// MARK: - Public properties
-    open var activityView: SQStoreActivityView?
-    
 // MARK: - Delegates
     public weak var delegate: SQStoreKitDelegate?
     public weak var uiDelegate: SQStoreKitUIDelegate?
@@ -34,17 +27,12 @@ open class SQStoreKit: NSObject {
 // MARK: - Private properties
     private var productsIDs = Set<String>()
     private var productsList = [SKProduct]()
-
     private var sharedSecret: String?
-    
     private var purchaseInProgress = false
-    
     private var requestTimer: Timer?
     
 // MARK: - Singletone
     public static let shared = SQStoreKit()
-
-// MARK: - Init
     private override init() {}
     
 // MARK: - Configure method
@@ -107,7 +95,10 @@ open class SQStoreKit: NSObject {
         
         self.delegate?.willPurchaseProduct(product, store: self)
         
-        self.addActivityView()
+        DispatchQueue.main.async {
+            self.uiDelegate?.acivityViewWillAppear()
+        }
+        
         self.purchaseInProgress = true
         SKPaymentQueue.default().add(SKPayment(product: product))
     }
@@ -129,7 +120,9 @@ open class SQStoreKit: NSObject {
     
     // восстановить покупки
     open func restorePurchases() {
-        self.addActivityView()
+        DispatchQueue.main.async {
+            self.uiDelegate?.acivityViewWillAppear()
+        }
         SKPaymentQueue.default().restoreCompletedTransactions()
     }
     
@@ -245,13 +238,17 @@ extension SQStoreKit: SKPaymentTransactionObserver {
     }
     
     public func paymentQueue(_ queue: SKPaymentQueue, restoreCompletedTransactionsFailedWithError error: Error) {
-        self.removeActivityView()
+        DispatchQueue.main.async {
+            self.uiDelegate?.acivityViewWillDisappear()
+        }
         print("SQStoreKit >>> Restore product failed with error: \(error.localizedDescription)")
         self.delegate?.restoreProductError(error, store: self)
     }
     
     public func paymentQueueRestoreCompletedTransactionsFinished(_ queue: SKPaymentQueue) {
-        self.removeActivityView()
+        DispatchQueue.main.async {
+            self.uiDelegate?.acivityViewWillDisappear()
+        }
     }
     
     private func complete(_ transaction: SKPaymentTransaction) {
@@ -259,7 +256,9 @@ extension SQStoreKit: SKPaymentTransactionObserver {
         self.updatePurchasedItem(productId: transaction.payment.productIdentifier, isRestore: false)
         SKPaymentQueue.default().finishTransaction(transaction)
         self.purchaseInProgress = false
-        self.removeActivityView()
+        DispatchQueue.main.async {
+            self.uiDelegate?.acivityViewWillDisappear()
+        }
     }
     
     private func restore(_ transaction: SKPaymentTransaction) {
@@ -268,7 +267,9 @@ extension SQStoreKit: SKPaymentTransactionObserver {
         self.refreshSubscriptionsStatus()
         SKPaymentQueue.default().finishTransaction(transaction)
         self.purchaseInProgress = false
-        self.removeActivityView()
+        DispatchQueue.main.async {
+            self.uiDelegate?.acivityViewWillDisappear()
+        }
     }
     
     private func failed(_ transaction: SKPaymentTransaction) {
@@ -290,40 +291,11 @@ extension SQStoreKit: SKPaymentTransactionObserver {
         
         SKPaymentQueue.default().finishTransaction(transaction)
         self.purchaseInProgress = false
-        self.removeActivityView()
-    }
-    
-}
-
-// MARK: - SQStoreActivityView
-extension SQStoreKit {
-
-    private func addActivityView() {
         DispatchQueue.main.async {
-            if let activityView = self.uiDelegate?.view.subviews.first(where: { $0.conforms(to: SQStoreActivityView.self) }) {
-                activityView.removeFromSuperview()
-            }
-            
-            #if !os(macOS)
-            guard let activityView = self.activityView as? UIView else { return }
-            #else
-            guard let activityView = self.activityView as? NSView else { return }
-            #endif
-            
-            self.uiDelegate?.view.addSubview(activityView)
-            print("SQStoreKit >>> Add activityView")
+            self.uiDelegate?.acivityViewWillDisappear()
         }
     }
     
-    private func removeActivityView() {
-        DispatchQueue.main.async {
-            if let activityView = self.uiDelegate?.view.subviews.first(where: { $0.conforms(to: SQStoreActivityView.self) }) {
-                activityView.removeFromSuperview()
-                print("SQStoreKit >>> Remove activityView")
-            }
-        }
-    }
-
 }
 
 // MARK: - AutoSubscribes methods

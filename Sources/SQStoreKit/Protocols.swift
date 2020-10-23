@@ -7,9 +7,6 @@
 //
 
 import StoreKit
-#if !os(macOS)
-import UIKit
-#endif
 
 // MARK: - ProductIdentifier
 public protocol ProductIdentifier {
@@ -18,15 +15,12 @@ public protocol ProductIdentifier {
     static func allIDs() -> [String]
 }
 
-// MARK: - SQStoreActivityView
-@objc public protocol SQStoreActivityView {}
-
 // MARK: - SQStoreKitUIDelegate
-#if !os(macOS)
-public protocol SQStoreKitUIDelegate: UIViewController {}
-#else
-public protocol SQStoreKitUIDelegate: NSViewController {}
-#endif
+public protocol SQStoreKitUIDelegate: class {
+    
+    func acivityViewWillAppear()
+    func acivityViewWillDisappear()
+}
 
 // MARK: - SQStoreKitDelegate
 public protocol SQStoreKitDelegate: class {
