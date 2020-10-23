@@ -39,6 +39,8 @@ open class SQStoreKit: NSObject {
     
     private var purchaseInProgress = false
     
+    private var requestTimer: Timer?
+    
 // MARK: - Singletone
     public static let shared = SQStoreKit()
 
@@ -191,20 +193,21 @@ extension SQStoreKit: SKProductsRequestDelegate {
     }
     
     public func request(_ request: SKRequest, didFailWithError error: Error) {
-        print("SQStoreKit >>> Error receive product list")
+        print("SQStoreKit >>> Error receive products list")
         self.restartRequest()
         self.delegate?.updateProductsListError(error, store: self)
     }
     
     private func restartRequest() {
         print("SQStoreKit >>> Restart request after \(Constants.kRestartReuestTimeInterval) sec")
-        let timer = Timer.scheduledTimer(timeInterval: Constants.kRestartReuestTimeInterval,
-                                         target: self,
-                                         selector: #selector(loadProducts),
-                                         userInfo: nil,
-                                         repeats: false)
-        
-        RunLoop.main.add(timer, forMode: .common)
+        self.requestTimer = Timer.scheduledTimer(timeInterval: Constants.kRestartReuestTimeInterval,
+                                                 target: self,
+                                                 selector: #selector(loadProducts),
+                                                 userInfo: nil,
+                                                 repeats: false)
+        if let timer = self.requestTimer {
+            RunLoop.main.add(timer, forMode: .common)
+        }
     }
     
 }
