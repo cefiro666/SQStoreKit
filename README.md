@@ -3,15 +3,15 @@
 
 ## Использование:
 
-1. Определить enum со списком BundleIdentifiers продуктов (инапов и автоподписок), который конфермит протокол ProductIdentifier
+1. Определить enum со списком BundleIdentifiers продуктов (инапов и автоподписок), который конфермит протокол IAPBundle:
 ```
-public protocol ProductIdentifier {
+public protocol IAPBundle {
     
     func productId() -> String
     static func allIds() -> [String]
 }
 
-enum IAPBundles: String, CaseIterable, ProductIdentifier {
+enum TestIAPBundles: String, CaseIterable, IAPBundle {
 
     case firstProduct
     case secondProduct
@@ -22,20 +22,20 @@ enum IAPBundles: String, CaseIterable, ProductIdentifier {
     }
 
     static func allIds() -> [String] {
-        return IAPBundles.allCases.map { Bundle.main.bundleIdentifier?.appending(".\($0.rawValue)") ?? "" }
+        return TestIAPBundles.allCases.map { Bundle.main.bundleIdentifier?.appending(".\($0.rawValue)") ?? "" }
     }
 }
 ```
 2. Инициализировать менеджер этим enum'ом и sharedSecret автоподписок (если есть)
 ```
-SQStoreKit.shared.initWithProductsEnum(IAPBundles.self, sharedSecret: "yui3y4iuy534i")
+SQStoreKit.shared.initWithProductsEnum(TestIAPBundles.self, sharedSecret: "yui3y4iuy534i")
 ```
 3. Можно совершать покупки продуктов и проверять куплены ли определенные инапы
 ```
-SQStoreKit.shared.purchaseProduct(IAPBundles.firstProduct)
-SQStoreKit.shared.purchaseProduct(IAPBundles.oneMonthSubscribe)
-SQStoreKit.shared.isPurchasedProduct(IAPBundles.oneMonthSubscribe)
-SQStoreKit.shared.isActiveSubscription(IAPBundles.oneMonthSubscribe)
+SQStoreKit.shared.purchaseProduct(TestIAPBundles.firstProduct)
+SQStoreKit.shared.purchaseProduct(TestIAPBundles.oneMonthSubscribe)
+SQStoreKit.shared.isPurchasedProduct(TestIAPBundles.oneMonthSubscribe)
+SQStoreKit.shared.isActiveSubscription(TestIAPBundles.oneMonthSubscribe)
 ```
 ## Делегаты
 
@@ -72,18 +72,14 @@ public protocol SQStoreKitDelegate: class {
 }
 ```
 
-- SQStoreKit.shared.uiDelegate - контроллер для отображения activityView
+- SQStoreKit.shared.uiDelegate - делеагат для методов отображения activityView во время работы библиотеки
 ```
-public protocol SQStoreKitUIDelegate: UIViewController {}
+public protocol SQStoreKitUIDelegate: class {
+    func acivityViewWillAppear()
+    func acivityViewWillDisappear()
+}
 ```
 
-## Параметры
-- view для отображения во время выполнения запроса покупки
-```
-@objc public protocol SQStoreActivityView {}
-
-open var activityView: SQStoreActivityView?
-```
 ## Публичные методы
 ```
 // доступны ли покупки
