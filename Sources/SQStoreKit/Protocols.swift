@@ -8,11 +8,11 @@
 
 import StoreKit
 
-// MARK: - ProductIdentifier
-public protocol ProductIdentifier {
+// MARK: - IAPBundle
+public protocol IAPBundle {
     
     func productId() -> String
-    static func allIDs() -> [String]
+    static func allIds() -> [String]
 }
 
 // MARK: - SQStoreKitUIDelegate
