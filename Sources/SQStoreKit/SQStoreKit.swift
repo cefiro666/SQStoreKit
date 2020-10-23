@@ -101,7 +101,7 @@ open class SQStoreKit: NSObject {
         print("SQStoreKit >>> Will buy product: \(product.localizedTitle)")
         
         guard !self.isPurchasedProduct(productsIdentifier) else {
-            print("SQStoreKit >>> Can't buy product \(product.localizedTitle), because already buyed!")
+            print("SQStoreKit >>> Can't buy product: \(product.localizedTitle), because already buyed!")
             return
         }
         
@@ -153,10 +153,10 @@ open class SQStoreKit: NSObject {
         for product in self.productsList {
             if product.productIdentifier == productId {
                 if isRestore {
-                    print("SQStoreKit >>> Did restore product \(product.localizedDescription)")
+                    print("SQStoreKit >>> Did restore product: \(product.localizedDescription)")
                     self.delegate?.didRestoreProduct(product, store: self)
                 } else {
-                    print("SQStoreKit >>> Did purchase product \(product.localizedDescription)")
+                    print("SQStoreKit >>> Did purchase product: \(product.localizedDescription)")
                     self.delegate?.didPurchaseProduct(product, store: self)
                 }
                 
@@ -184,7 +184,7 @@ extension SQStoreKit: SKProductsRequestDelegate {
         }
         
         let sortedProducts = response.products.sorted { $0.price.floatValue < $1.price.floatValue }
-        sortedProducts.forEach { print("SQStoreKit >>> Find product \($0.localizedTitle) - \($0.localizedPrice())") }
+        sortedProducts.forEach { print("SQStoreKit >>> Find product: \($0.localizedTitle) - \($0.localizedPrice())") }
         
         self.productsList = sortedProducts
         self.delegate?.didUpdateProductsList(sortedProducts, store: self)
@@ -246,7 +246,7 @@ extension SQStoreKit: SKPaymentTransactionObserver {
     
     public func paymentQueue(_ queue: SKPaymentQueue, restoreCompletedTransactionsFailedWithError error: Error) {
         self.removeActivityView()
-        print("SQStoreKit >>> Restore product failed with error \(error.localizedDescription)")
+        print("SQStoreKit >>> Restore product failed with error: \(error.localizedDescription)")
         self.delegate?.restoreProductError(error, store: self)
     }
     
@@ -272,7 +272,7 @@ extension SQStoreKit: SKPaymentTransactionObserver {
     }
     
     private func failed(_ transaction: SKPaymentTransaction) {
-        print("SQStoreKit >>> Transaction failed with error \(transaction.error?.localizedDescription ?? "")")
+        print("SQStoreKit >>> Transaction failed with error: \(transaction.error?.localizedDescription ?? "")")
         if (transaction.error as? SKError)?.code == .paymentCancelled {
             if let error = transaction.error {
                 self.delegate?.purchaseProductError(error, store: self)
