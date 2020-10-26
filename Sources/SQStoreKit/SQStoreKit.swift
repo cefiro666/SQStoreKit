@@ -44,7 +44,7 @@ public class SQStoreKit: NSObject {
         SKPaymentQueue.default().add(self)
         self.getIAPProductsInfoUseCase?.execute { [weak self] (success, productsInfo, errorMessage) in
             guard success, let productsInfo = productsInfo else {
-                print("SQStoreKit >>> Could not get products info for load products!")
+                print("SQStoreKit >>> Could not get products info for load products! \(errorMessage ?? "")")
                 return
             }
             
