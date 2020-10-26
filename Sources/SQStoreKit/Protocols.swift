@@ -9,7 +9,7 @@
 import StoreKit
 
 // MARK: - IAPProductsInfo
-public typealias IAPProductsInfo = (productsIdentifiers: [String], sharedSecret: String)
+public typealias IAPProductsInfo = (productsIdentifiers: [String], sharedSecret: String?)
 
 // MARK: - GetIAPProductsInfoUseCase
 public protocol GetIAPProductsInfoUseCase {
