@@ -61,6 +61,9 @@ public class SQStoreKit: NSObject {
     public func canMakePayments() -> Bool {
         let canMakePayments = SKPaymentQueue.canMakePayments()
         print(canMakePayments ? "SQStoreKit >>> Can make payments" : "SQStoreKit >>> Can't make payments")
+        #if TARGET_IPHONE_SIMULATOR
+        print("Attention! IAPs function only on a real device!")
+        #endif
         return canMakePayments
     }
     
@@ -89,7 +92,7 @@ public class SQStoreKit: NSObject {
         }
         
         if self.purchaseInProgress {
-            print("SQStoreKit >>> Purchase in progress!")
+            print("SQStoreKit >>> Purchase already in progress!")
             return
         }
         
@@ -196,7 +199,7 @@ extension SQStoreKit: SKProductsRequestDelegate {
     }
     
     public func request(_ request: SKRequest, didFailWithError error: Error) {
-        print("SQStoreKit >>> Error receive products list. \(error.localizedDescription)")
+        print("SQStoreKit >>> Receive products list error: \(error.localizedDescription)")
         self.delegate?.updateProductsListError(error, store: self)
         self.restartRequest()
     }
