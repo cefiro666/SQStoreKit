@@ -61,7 +61,7 @@ public class SQStoreKit: NSObject {
     public func canMakePayments() -> Bool {
         let canMakePayments = SKPaymentQueue.canMakePayments()
         print(canMakePayments ? "SQStoreKit >>> Can make payments" : "SQStoreKit >>> Can't make payments")
-        #if TARGET_IPHONE_SIMULATOR
+        #if TARGET_OS_SIMULATOR
         print("Attention! IAPs function only on a real device!")
         #endif
         return canMakePayments
@@ -283,7 +283,7 @@ extension SQStoreKit: SKPaymentTransactionObserver {
                 self.delegate?.purchaseProductCanceled(error, store: self)
             }
             
-            #if TARGET_IPHONE_SIMULATOR
+            #if TARGET_OS_SIMULATOR
             self.updatePurchasedItem(productId: transaction.payment.productIdentifier, isRestore: false)
             #endif
             
