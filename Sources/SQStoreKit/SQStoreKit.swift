@@ -220,7 +220,7 @@ extension SQStoreKit: SKProductsRequestDelegate {
     }
     
     public func request(_ request: SKRequest, didFailWithError error: Error) {
-        print("SQStoreKit >>> Error receive products list")
+        print("SQStoreKit >>> Error receive products list. \(error.localizedDescription)")
         self.delegate?.updateProductsListError(error, store: self)
         self.restartRequest()
     }
@@ -301,7 +301,7 @@ extension SQStoreKit: SKPaymentTransactionObserver {
         print("SQStoreKit >>> Transaction failed with error: \(transaction.error?.localizedDescription ?? "")")
         if (transaction.error as? SKError)?.code == .paymentCancelled {
             if let error = transaction.error {
-                self.delegate?.purchaseProductError(error, store: self)
+                self.delegate?.purchaseProductCanceled(error, store: self)
             }
             
             #if TARGET_IPHONE_SIMULATOR
@@ -310,7 +310,7 @@ extension SQStoreKit: SKPaymentTransactionObserver {
             
         } else {
             if let error = transaction.error {
-                self.delegate?.purchaseProductCanceled(error, store: self)
+                self.delegate?.purchaseProductError(error, store: self)
             }
         }
         
