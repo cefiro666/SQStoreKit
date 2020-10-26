@@ -18,7 +18,7 @@ fileprivate struct Constants {
 }
 
 // MARK: - SQStoreKit
-open class SQStoreKit: NSObject {
+public class SQStoreKit: NSObject {
     
 // MARK: - Delegates
     public weak var delegate: SQStoreKitDelegate?
@@ -36,7 +36,7 @@ open class SQStoreKit: NSObject {
     private override init() {}
     
 // MARK: - Configure method
-    open func initWithProductsEnum(_ bundleEnum: IAPBundle.Type, sharedSecret: String? = nil) {
+    public func initWithProductsEnum(_ bundleEnum: IAPBundle.Type, sharedSecret: String? = nil) {
         guard self.canMakePayments(),
             !bundleEnum.allIds().isEmpty else {
                 
@@ -55,7 +55,7 @@ open class SQStoreKit: NSObject {
 // MARK: - Publics methods
     
     // доступны ли покупки
-    open func canMakePayments() -> Bool {
+    public func canMakePayments() -> Bool {
         print(SKPaymentQueue.canMakePayments() ?
             "SQStoreKit >>> Can make payments" : "SQStoreKit >>> Can't make payments")
         
@@ -63,44 +63,44 @@ open class SQStoreKit: NSObject {
     }
     
     // куплен ли продукт с бандлом
-    open func isPurchasedProduct(_ bundle: IAPBundle) -> Bool {
+    public func isPurchasedProduct(_ bundle: IAPBundle) -> Bool {
         return isPurchasedProduct(bundle.productId())
     }
     
     // куплен ли продукт с идентификатором
-    open func isPurchasedProduct(_ productIdentifier: String) -> Bool {
+    public func isPurchasedProduct(_ productIdentifier: String) -> Bool {
         return UserDefaults.standard.bool(forKey: productIdentifier)
     }
     
     // пометить как купленный с бандлом
-    open func markAsPurchasedProduct(_ bundle: IAPBundle) {
+    public func markAsPurchasedProduct(_ bundle: IAPBundle) {
         self.markAsPurchasedProduct(bundle.productId())
     }
      
     // пометить как купленный с идентификатором
-    open func markAsPurchasedProduct(_ productIdentifier: String) {
+    public func markAsPurchasedProduct(_ productIdentifier: String) {
         UserDefaults.standard.set(true, forKey: productIdentifier)
         UserDefaults.standard.synchronize()
     }
     
     // пометить как некупленный с бандлом
-    open func markAsNotPurchasedProduct(_ bundle: IAPBundle) {
+    public func markAsNotPurchasedProduct(_ bundle: IAPBundle) {
         self.markAsNotPurchasedProduct(bundle.productId())
     }
     
     // пометить как некупленный с идентификатором
-    open func markAsNotPurchasedProduct(_ productIdentifier: String) {
+    public func markAsNotPurchasedProduct(_ productIdentifier: String) {
         UserDefaults.standard.set(false, forKey: productIdentifier)
         UserDefaults.standard.synchronize()
     }
     
     // купить продукт с бандлом
-    open func purchaseProduct(_ bundle: IAPBundle) {
+    public func purchaseProduct(_ bundle: IAPBundle) {
         self.purchaseProduct(bundle.productId())
     }
     
     // купить продукт с идентификатором
-    open func purchaseProduct(_ productIdentifier: String) {
+    public func purchaseProduct(_ productIdentifier: String) {
         guard let product = self.getProduct(productIdentifier) else {
             print("SQStoreKit >>> Product identifier is invalid!")
             return
@@ -129,27 +129,27 @@ open class SQStoreKit: NSObject {
     }
     
     // получить продукт по текстовому идентификатору
-    open func getProduct(_ bundle: IAPBundle) -> SKProduct? {
+    public func getProduct(_ bundle: IAPBundle) -> SKProduct? {
         return self.getProduct(bundle.productId())
     }
     
     // получить продукт по идентификатору перечисления
-    open func getProduct(_ identifier: String) -> SKProduct? {
+    public func getProduct(_ identifier: String) -> SKProduct? {
         return self.productsList.first(where: {$0.productIdentifier == identifier})
     }
     
     // получить все продукты
-    open func getProducts() -> [SKProduct] {
+    public func getProducts() -> [SKProduct] {
         return self.productsList
     }
     
     // сколько доступно продуктов
-    open func productsCount() -> Int {
+    public func productsCount() -> Int {
         return self.productsList.count
     }
     
     // восстановить покупки
-    open func restorePurchases() {
+    public func restorePurchases() {
         DispatchQueue.main.async {
             self.uiDelegate?.acivityViewWillAppear()
         }
@@ -329,12 +329,12 @@ extension SQStoreKit {
 // MARK: - Public methods
     
     // активна ли еще автоподписка
-    open func isActiveSubscription(_ bundle: IAPBundle) -> Bool {
+    public func isActiveSubscription(_ bundle: IAPBundle) -> Bool {
         return self.isActiveSubscription(bundle.productId())
     }
     
     // активна ли еще автоподписка
-    open func isActiveSubscription(_ productIdentifier: String) -> Bool {
+    public func isActiveSubscription(_ productIdentifier: String) -> Bool {
         guard let expirationDate = self.expirationDateForSubscriptionWithId(productIdentifier) else { return false }
         return expirationDate > Date()
     }
@@ -422,7 +422,7 @@ extension SQStoreKit {
 // MARK: - isConnectedToNetwork
 public class DeviceNetwork {
     
-    class func isConnectedToNetwork() -> Bool {
+    public class func isConnectedToNetwork() -> Bool {
         var zeroAddress = sockaddr()
         zeroAddress.sa_len = UInt8(MemoryLayout<sockaddr>.size)
         zeroAddress.sa_family = sa_family_t(AF_INET)

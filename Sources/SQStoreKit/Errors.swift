@@ -9,7 +9,7 @@
 import Foundation
 
 // MARK: - SQStoreKitError
-enum SQStoreKitError: Error {
+public enum SQStoreKitError: Error {
     
     case noProductIDsFound
     case noProductsFound
@@ -20,7 +20,7 @@ enum SQStoreKitError: Error {
 // MARK: - SQStoreKitError
 extension SQStoreKitError: LocalizedError {
     
-    var errorDescription: String? {
+    public var errorDescription: String? {
         switch self {
         case .noProductIDsFound: return "No In-App Purchase product identifiers were found."
         case .noProductsFound: return "No In-App Purchases were found."

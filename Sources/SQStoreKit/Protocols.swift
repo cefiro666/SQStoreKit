@@ -54,7 +54,7 @@ public protocol SQStoreKitDelegate: class {
 }
 
 // MARK: - SQStoreKitDelegate implementation for optional funcs
-extension SQStoreKitDelegate {
+public extension SQStoreKitDelegate {
     
     func didUpdateProductsList(_ productsList: [SKProduct], store: SQStoreKit) {}
     func updateProductsListError(_ error: Error, store: SQStoreKit) {}

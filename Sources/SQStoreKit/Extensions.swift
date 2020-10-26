@@ -17,11 +17,11 @@ extension Notification.Name {
 // MARK: - SKProduct
 extension SKProduct {
     
-    open func priceForPeriodPerMonthsCount(_ monthsCount: Int) -> Float {
+    public func priceForPeriodPerMonthsCount(_ monthsCount: Int) -> Float {
         return self.price.floatValue / Float(monthsCount)
     }
     
-    open func localizedPrice() -> String {
+    public func localizedPrice() -> String {
         let numberFormatter = NumberFormatter()
         numberFormatter.formatterBehavior = .behavior10_4
         numberFormatter.numberStyle = .currency
