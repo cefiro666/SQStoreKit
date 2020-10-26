@@ -8,11 +8,20 @@
 
 import StoreKit
 
+// MARK: - IAPProductsInfo
+public typealias IAPProductsInfo = (productsIdentifiers: [String], sharedSecret: String)
+
+// MARK: - GetIAPProductsInfoUseCase
+public protocol GetIAPProductsInfoUseCase {
+    
+    func execute(_ completionHandler: @escaping (_ success: Bool, _ productsInfo: IAPProductsInfo?, _ errorMessage: String?) -> ())
+}
+
 // MARK: - SQStoreKitUIDelegate
 public protocol SQStoreKitUIDelegate: class {
     
-    func acivityViewWillAppear()
-    func acivityViewWillDisappear()
+    func willStartLongProcess()
+    func didFinishLongProcess()
 }
 
 // MARK: - SQStoreKitDelegate

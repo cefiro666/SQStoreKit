@@ -11,7 +11,6 @@ import StoreKit
 // MARK: - Constants
 fileprivate struct Constants {
     
-    static let kRestartReuestTimeInterval: TimeInterval = 15.0
     static let kSandboxUrl = "https://sandbox.itunes.apple.com/verifyReceipt"
     static let kBuyUrl = "https://buy.itunes.apple.com/verifyReceipt"
 }
@@ -22,6 +21,10 @@ public class SQStoreKit: NSObject {
 // MARK: - Delegates
     public weak var delegate: SQStoreKitDelegate?
     public weak var uiDelegate: SQStoreKitUIDelegate?
+    
+// MARK: - Properties
+    public var getIAPProductsInfoUseCase: GetIAPProductsInfoUseCase?
+    public var restartReuestTimeInterval: TimeInterval = 10.0
     
 // MARK: - Private properties
     private var productsIds = Set<String>()
@@ -35,25 +38,30 @@ public class SQStoreKit: NSObject {
     private override init() {}
     
 // MARK: - Configure method
-    public func initWithProductsIdentifiers(productsIdentifiers: [String], sharedSecret: String? = nil) {
+    public func loadProducts() {
         if !self.canMakePayments() { return }
         
         SKPaymentQueue.default().add(self)
-        
-        self.productsIds = Set<String>(productsIdentifiers)
-        self.sharedSecret = sharedSecret
-        
-        self.loadProducts()
+        self.getIAPProductsInfoUseCase?.execute { [weak self] (success, productsInfo, errorMessage) in
+            guard success, let productsInfo = productsInfo else {
+                print("SQStoreKit >>> Could not get products info for load products!")
+                return
+            }
+            
+            self?.productsIds = Set<String>(productsInfo.productsIdentifiers)
+            self?.sharedSecret = productsInfo.sharedSecret
+            
+            self?.loadAvailableProducts()
+        }
     }
 
 // MARK: - Publics methods
     
     // доступны ли покупки
     public func canMakePayments() -> Bool {
-        print(SKPaymentQueue.canMakePayments() ?
-            "SQStoreKit >>> Can make payments" : "SQStoreKit >>> Can't make payments")
-        
-        return SKPaymentQueue.canMakePayments()
+        let canMakePayments = SKPaymentQueue.canMakePayments()
+        print(canMakePayments ? "SQStoreKit >>> Can make payments" : "SQStoreKit >>> Can't make payments")
+        return canMakePayments
     }
     
     // куплен ли продукт
@@ -95,7 +103,7 @@ public class SQStoreKit: NSObject {
         self.delegate?.willPurchaseProduct(product, store: self)
         
         DispatchQueue.main.async {
-            self.uiDelegate?.acivityViewWillAppear()
+            self.uiDelegate?.willStartLongProcess()
         }
         
         self.purchaseInProgress = true
@@ -120,13 +128,13 @@ public class SQStoreKit: NSObject {
     // восстановить покупки
     public func restorePurchases() {
         DispatchQueue.main.async {
-            self.uiDelegate?.acivityViewWillAppear()
+            self.uiDelegate?.willStartLongProcess()
         }
         SKPaymentQueue.default().restoreCompletedTransactions()
     }
     
 // MARK: - Private methods
-    @objc private func loadProducts() {
+    @objc private func loadAvailableProducts() {
         print("SQStoreKit >>> Attempt to load products...")
         
         self.requestTimer?.invalidate()
@@ -167,7 +175,6 @@ extension SQStoreKit: SKProductsRequestDelegate {
     public func productsRequest(_ request: SKProductsRequest, didReceive response: SKProductsResponse) {
         if response.products.isEmpty {
             print("SQStoreKit >>> Products list is empty")
-            self.restartRequest()
         }
         
         let sortedProducts = response.products.sorted { $0.price.floatValue < $1.price.floatValue }
@@ -195,11 +202,11 @@ extension SQStoreKit: SKProductsRequestDelegate {
     }
     
     private func restartRequest() {
-        print("SQStoreKit >>> Restart request after \(Constants.kRestartReuestTimeInterval) sec")
+        print("SQStoreKit >>> Restart request after \(self.restartReuestTimeInterval) sec")
         DispatchQueue.main.async {
-            self.requestTimer = Timer.scheduledTimer(timeInterval: Constants.kRestartReuestTimeInterval,
+            self.requestTimer = Timer.scheduledTimer(timeInterval: self.restartReuestTimeInterval,
                                                      target: self,
-                                                     selector: #selector(self.loadProducts),
+                                                     selector: #selector(self.loadAvailableProducts),
                                                      userInfo: nil,
                                                      repeats: false)
             if let timer = self.requestTimer {
@@ -233,7 +240,7 @@ extension SQStoreKit: SKPaymentTransactionObserver {
     
     public func paymentQueue(_ queue: SKPaymentQueue, restoreCompletedTransactionsFailedWithError error: Error) {
         DispatchQueue.main.async {
-            self.uiDelegate?.acivityViewWillDisappear()
+            self.uiDelegate?.didFinishLongProcess()
         }
         print("SQStoreKit >>> Restore product failed with error: \(error.localizedDescription)")
         self.delegate?.restoreProductError(error, store: self)
@@ -241,7 +248,7 @@ extension SQStoreKit: SKPaymentTransactionObserver {
     
     public func paymentQueueRestoreCompletedTransactionsFinished(_ queue: SKPaymentQueue) {
         DispatchQueue.main.async {
-            self.uiDelegate?.acivityViewWillDisappear()
+            self.uiDelegate?.didFinishLongProcess()
         }
     }
     
@@ -251,7 +258,7 @@ extension SQStoreKit: SKPaymentTransactionObserver {
         SKPaymentQueue.default().finishTransaction(transaction)
         self.purchaseInProgress = false
         DispatchQueue.main.async {
-            self.uiDelegate?.acivityViewWillDisappear()
+            self.uiDelegate?.didFinishLongProcess()
         }
     }
     
@@ -262,7 +269,7 @@ extension SQStoreKit: SKPaymentTransactionObserver {
         SKPaymentQueue.default().finishTransaction(transaction)
         self.purchaseInProgress = false
         DispatchQueue.main.async {
-            self.uiDelegate?.acivityViewWillDisappear()
+            self.uiDelegate?.didFinishLongProcess()
         }
     }
     
@@ -286,7 +293,7 @@ extension SQStoreKit: SKPaymentTransactionObserver {
         SKPaymentQueue.default().finishTransaction(transaction)
         self.purchaseInProgress = false
         DispatchQueue.main.async {
-            self.uiDelegate?.acivityViewWillDisappear()
+            self.uiDelegate?.didFinishLongProcess()
         }
     }
     
@@ -294,92 +301,92 @@ extension SQStoreKit: SKPaymentTransactionObserver {
 
 // MARK: - AutoSubscribes methods
 extension SQStoreKit {
-    
+
 // MARK: - Public methods
-    
+
     // активна ли еще автоподписка
     public func isActiveSubscription(_ productIdentifier: String) -> Bool {
         guard let expirationDate = self.expirationDateForSubscriptionWithId(productIdentifier) else { return false }
         return expirationDate > Date()
     }
-    
+
 // MARK: - Private methods
     private func refreshSubscriptionsStatus() {
         guard let receiptUrl = Bundle.main.appStoreReceiptURL else {
             self.refreshReceipt()
             return
         }
-        
+
         #if DEBUG
         let urlString = Constants.kSandboxUrl
         #else
         let urlString = Constants.kBuyUrl
         #endif
-        
+
         let receiptData = try? Data(contentsOf: receiptUrl).base64EncodedString()
         let requestData = ["receipt-data": receiptData ?? "",
                            "password": self.sharedSecret as Any,
                            "exclude-old-transactions": true] as [String: Any]
-        
+
         guard let url = URL(string: urlString) else {
             print("SQStoreKit >>> Invalid url")
             return
         }
-        
+
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("Application/json", forHTTPHeaderField: "Content-Type")
-        
+
         let httpBody = try? JSONSerialization.data(withJSONObject: requestData, options: [])
         request.httpBody = httpBody
-        
+
         URLSession.shared.dataTask(with: request)  { (data, response, error) in
             DispatchQueue.main.async {
                 if let data = data,
                     let json = try? JSONSerialization.jsonObject(with: data, options: .allowFragments),
                     let receiptDictionary = json as? [String: Any] {
-                    
+
                     self.parseReceipt(receiptDictionary)
                     return
-                    
+
                 } else {
                     print("SQStoreKit >>> Error validating receipt: \(error?.localizedDescription ?? "")")
                 }
             }
         }.resume()
     }
-    
+
     private func refreshReceipt() {
         let request = SKReceiptRefreshRequest(receiptProperties: nil)
         request.delegate = self
         request.start()
     }
-    
+
     private func parseReceipt(_ json: [String: Any]) {
         guard let receiptsArray = json["latest_receipt_info"] as? [[String: Any]] else { return }
         for receipt in receiptsArray {
             guard let productId = receipt["product_id"] as? String,
                 let expiresDateString = receipt["expires_date"] as? String else {
-                    
+
                 print("SQStoreKit >>> Invalid receipt")
                 continue
             }
-            
+
             let cancellationDate = receipt["cancellation_date"] as? String
-            
+
             let formatter = DateFormatter()
             formatter.dateFormat = "yyyy-MM-dd HH:mm:ss VV"
-            
+
             if let date = formatter.date(from: cancellationDate ?? expiresDateString), date > Date() {
                 UserDefaults.standard.set(date, forKey: productId)
                 UserDefaults.standard.synchronize()
             }
         }
     }
-    
+
     private func expirationDateForSubscriptionWithId(_ id: String) -> Date? {
         return UserDefaults.standard.object(forKey: id) as? Date
     }
-    
+
 }
 
