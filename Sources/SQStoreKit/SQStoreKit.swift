@@ -7,7 +7,6 @@
 //
 
 import StoreKit
-import SystemConfiguration
 
 // MARK: - Constants
 fileprivate struct Constants {
@@ -25,7 +24,7 @@ public class SQStoreKit: NSObject {
     public weak var uiDelegate: SQStoreKitUIDelegate?
     
 // MARK: - Private properties
-    private var productsIDs = Set<String>()
+    private var productsIds = Set<String>()
     private var productsList = [SKProduct]()
     private var sharedSecret: String?
     private var purchaseInProgress = false
@@ -36,17 +35,12 @@ public class SQStoreKit: NSObject {
     private override init() {}
     
 // MARK: - Configure method
-    public func initWithProductsEnum(_ bundleEnum: IAPBundle.Type, sharedSecret: String? = nil) {
-        guard self.canMakePayments(),
-            !bundleEnum.allIds().isEmpty else {
-                
-            print("SQStoreKit >>> Error init store")
-            return
-        }
+    public func initWithProductsIdentifiers(productsIdentifiers: [String], sharedSecret: String? = nil) {
+        if !self.canMakePayments() { return }
         
         SKPaymentQueue.default().add(self)
         
-        self.productsIDs = Set<String>(bundleEnum.allIds())
+        self.productsIds = Set<String>(productsIdentifiers)
         self.sharedSecret = sharedSecret
         
         self.loadProducts()
@@ -62,44 +56,24 @@ public class SQStoreKit: NSObject {
         return SKPaymentQueue.canMakePayments()
     }
     
-    // куплен ли продукт с бандлом
-    public func isPurchasedProduct(_ bundle: IAPBundle) -> Bool {
-        return isPurchasedProduct(bundle.productId())
-    }
-    
-    // куплен ли продукт с идентификатором
+    // куплен ли продукт
     public func isPurchasedProduct(_ productIdentifier: String) -> Bool {
         return UserDefaults.standard.bool(forKey: productIdentifier)
     }
-    
-    // пометить как купленный с бандлом
-    public func markAsPurchasedProduct(_ bundle: IAPBundle) {
-        self.markAsPurchasedProduct(bundle.productId())
-    }
      
-    // пометить как купленный с идентификатором
+    // пометить как купленный
     public func markAsPurchasedProduct(_ productIdentifier: String) {
         UserDefaults.standard.set(true, forKey: productIdentifier)
         UserDefaults.standard.synchronize()
     }
     
-    // пометить как некупленный с бандлом
-    public func markAsNotPurchasedProduct(_ bundle: IAPBundle) {
-        self.markAsNotPurchasedProduct(bundle.productId())
-    }
-    
-    // пометить как некупленный с идентификатором
+    // пометить как некупленный
     public func markAsNotPurchasedProduct(_ productIdentifier: String) {
         UserDefaults.standard.set(false, forKey: productIdentifier)
         UserDefaults.standard.synchronize()
     }
     
-    // купить продукт с бандлом
-    public func purchaseProduct(_ bundle: IAPBundle) {
-        self.purchaseProduct(bundle.productId())
-    }
-    
-    // купить продукт с идентификатором
+    // купить продукт
     public func purchaseProduct(_ productIdentifier: String) {
         guard let product = self.getProduct(productIdentifier) else {
             print("SQStoreKit >>> Product identifier is invalid!")
@@ -128,12 +102,7 @@ public class SQStoreKit: NSObject {
         SKPaymentQueue.default().add(SKPayment(product: product))
     }
     
-    // получить продукт по текстовому идентификатору
-    public func getProduct(_ bundle: IAPBundle) -> SKProduct? {
-        return self.getProduct(bundle.productId())
-    }
-    
-    // получить продукт по идентификатору перечисления
+    // получить продукт
     public func getProduct(_ identifier: String) -> SKProduct? {
         return self.productsList.first(where: {$0.productIdentifier == identifier})
     }
@@ -163,7 +132,7 @@ public class SQStoreKit: NSObject {
         self.requestTimer?.invalidate()
         self.requestTimer = nil
         
-        let request = SKProductsRequest.init(productIdentifiers: self.productsIDs)
+        let request = SKProductsRequest.init(productIdentifiers: self.productsIds)
         request.delegate = self
         request.start()
     }
@@ -329,11 +298,6 @@ extension SQStoreKit {
 // MARK: - Public methods
     
     // активна ли еще автоподписка
-    public func isActiveSubscription(_ bundle: IAPBundle) -> Bool {
-        return self.isActiveSubscription(bundle.productId())
-    }
-    
-    // активна ли еще автоподписка
     public func isActiveSubscription(_ productIdentifier: String) -> Bool {
         guard let expirationDate = self.expirationDateForSubscriptionWithId(productIdentifier) else { return false }
         return expirationDate > Date()
@@ -419,19 +383,3 @@ extension SQStoreKit {
     
 }
 
-// MARK: - isConnectedToNetwork
-public class DeviceNetwork {
-    
-    public class func isConnectedToNetwork() -> Bool {
-        var zeroAddress = sockaddr()
-        zeroAddress.sa_len = UInt8(MemoryLayout<sockaddr>.size)
-        zeroAddress.sa_family = sa_family_t(AF_INET)
-        guard let defaultRouteReachability = withUnsafePointer(to: &zeroAddress, {
-            SCNetworkReachabilityCreateWithAddress(nil, UnsafePointer($0))
-        }) else { return false }
-        var flags = SCNetworkReachabilityFlags()
-        guard SCNetworkReachabilityGetFlags(defaultRouteReachability, &flags) else { return false }
-        return flags.contains(.reachable) && !flags.contains(.connectionRequired)
-    }
-    
-}

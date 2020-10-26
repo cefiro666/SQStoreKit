@@ -8,13 +8,6 @@
 
 import StoreKit
 
-// MARK: - IAPBundle
-public protocol IAPBundle {
-    
-    func productId() -> String
-    static func allIds() -> [String]
-}
-
 // MARK: - SQStoreKitUIDelegate
 public protocol SQStoreKitUIDelegate: class {
     
