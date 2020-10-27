@@ -21,11 +21,11 @@ extension SKProduct {
         return self.price.floatValue / Float(monthsCount)
     }
     
-    public func localizedPrice(_ locale: Locale = .init(identifier: "RU_ru")) -> String {
+    public func localizedPrice() -> String {
         let numberFormatter = NumberFormatter()
         numberFormatter.formatterBehavior = .behavior10_4
         numberFormatter.numberStyle = .currency
-        numberFormatter.locale = locale
+        numberFormatter.locale = self.priceLocale
         let localizedPriceString = numberFormatter.string(from: self.price) ?? "price error"
         
         return localizedPriceString
